@@ -80,6 +80,7 @@ int main() {
     ride2.loadFromFile(R"(C:\Users\andra\Desktop\prog2nagyhazi\Balatoneszakipart.txt)");
     ride2.printSummary();
 
+    std::cout << "Ride 2: " << ride2.name << "\n"; //ezt a git change celjabol irom ide
 
     return 0;
 }
