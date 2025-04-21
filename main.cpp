@@ -1,29 +1,34 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <vector>
 #include <string>
-#include <direct.h> 
+#include <vector>
+#include <iomanip>
+#include <algorithm>
+#include <ctime>
+#include <cmath>
 
 
 class GpsPoint {
 public:
-    std::string timestamp;
-    double longitude;
-    double latitude;
-    double elevation;
-
-    GpsPoint(const std::string& ts, double lon, double lat, double ele)
-        : timestamp(ts), longitude(lon), latitude(lat), elevation(ele) {
-    }
+	std::string timestamp;
+	double longitude;
+	double latitude;
+	double elevation;
+	GpsPoint(const std::string& ts, double lon, double lat, double ele)
+		: timestamp(ts), longitude(lon), latitude(lat), elevation(ele) {
+	}
 };
 
-class Ride {
+
+class Activity {
 public:
     std::string name;
     std::vector<GpsPoint> points;
 
-    void loadFromFile(const std::string& filename) {
+    virtual ~Activity() {}
+
+    virtual void loadFromFile(const std::string& filename) {
         std::ifstream file(filename);
         if (!file) {
             std::cerr << "Error opening file: " << filename << std::endl;
@@ -32,16 +37,14 @@ public:
 
         std::string line;
 
-        // az elso sor a tura elnevezese
-        if (std::getline(file, line)) {
-            name = line;
-        }
-        else {
-            std::cerr << "Error reading ride name from file: " << filename << std::endl;
+        // Read metadata (implemented in child)
+        if (!std::getline(file, line)) {
+            std::cerr << "Error reading activity metadata." << std::endl;
             return;
         }
+        parseMetadata(line);
 
-        // osszes gps sor beolvasasa
+        // GPS points
         while (std::getline(file, line)) {
             std::istringstream iss(line);
             std::string ts;
@@ -50,13 +53,15 @@ public:
                 points.emplace_back(ts, lon, lat, ele);
             }
             else {
-                std::cerr << "Error reading GPS point from line: " << line << std::endl;
+                std::cerr << "Error parsing GPS point: " << line << std::endl;
             }
         }
     }
 
-    void printSummary(size_t count = 5) const {
-        std::cout << "Ride: " << name << "\n";
+    virtual void parseMetadata(const std::string& line) = 0;
+
+    virtual void printSummary(size_t count = 5) const {
+        std::cout << "Activity: " << name << "\n";
         std::cout << "Total points: " << points.size() << "\n";
         for (size_t i = 0; i < std::min(points.size(), count); ++i) {
             const auto& p = points[i];
@@ -65,22 +70,56 @@ public:
         }
     }
 };
+class BikeRide : public Activity {
+public:
+    std::string bikeUsed;
+
+    void parseMetadata(const std::string& line) override {
+        name = "Bike Ride";
+        bikeUsed = line; // For example, "Cannondale Synapse"
+    }
+
+    void printSummary(size_t count = 5) const override {
+        std::cout << name << " (Bike: " << bikeUsed << ")\n";
+        Activity::printSummary(count);
+    }
+};
+
+class RunActivity : public Activity {
+public:
+    std::string shoes;
+
+    void parseMetadata(const std::string& line) override {
+        name = "Run";
+        shoes = line; // For example, "Nike ZoomX"
+    }
+
+    void printSummary(size_t count = 5) const override {
+        std::cout << name << " (Shoes: " << shoes << ")\n";
+        Activity::printSummary(count);
+    }
+};
+
 
 int main() {
- 
-    Ride ride;
-    ride.loadFromFile(R"(C:\Users\andra\Desktop\prog2nagyhazi\etyekidombokig.txt)");
+    std::vector<Activity*> activities;
 
-	if (ride.points.empty()) {
-		std::cerr << "No GPS points loaded." << std::endl;
-		return 1;
-	}
-    ride.printSummary();
-    Ride ride2;
-    ride2.loadFromFile(R"(C:\Users\andra\Desktop\prog2nagyhazi\Balatoneszakipart.txt)");
-    ride2.printSummary();
+    Activity* a1 = new BikeRide();
+    a1->loadFromFile(R"(C:\Users\andra\Desktop\prog2nagyhazi\etyekidombokig.txt)");
+    activities.push_back(a1);
 
-    std::cout << "Ride 2: " << ride2.name << "\n"; //ezt a git change celjabol irom ide
+    Activity* a2 = new RunActivity();
+    a2->loadFromFile(R"(C:\Users\andra\Desktop\prog2nagyhazi\Balatoneszakipart.txt)");
+    activities.push_back(a2);
+
+    for (const auto* act : activities) {
+        act->printSummary();
+        std::cout << "\n";
+    }
+
+    for (auto* act : activities) {
+        delete act;
+    }
 
     return 0;
 }
