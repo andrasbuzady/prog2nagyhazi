@@ -127,7 +127,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Activity.cpp" />
+    <ClCompile Include="BikeRide.cpp" />
+    <ClCompile Include="GpsPoint.cpp" />
+    <ClCompile Include="Haversine.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="RunActivity.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Activity.h" />
+    <ClInclude Include="BikeRide.h" />
+    <ClInclude Include="GpsPoint.h" />
+    <ClInclude Include="Haversine.h" />
+    <ClInclude Include="RunActivity.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
